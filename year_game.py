@@ -1,4 +1,28 @@
 import random
+"""
+this game is just about how well you can calculate the day of the week for a given date.
+======
+LOGIC:
+starts at year 400, with that months 7 days of week as follows:
+jan: fri
+feb: mon
+mar: tues
+apr: fri 
+may: sun 
+jun: wed 
+jul: fri 
+aug: mon 
+sep: thurs 
+oct: sat 
+nov: tues 
+dec: thurs
+for tickers counting:
+    +1 for each day, +1 for each year +1 for each leap year
+    # a leap year is all divisible by 4, except for years that are divisible by 100, but not divisible by 400
+    # ie +24 per century + possible century leap
+    # always can simplify down with %7
+    # if year is a leap year, then jan and feb dont get +1 till following year
+"""
 def jf_pipeline(month, day, year):
     counter = 0
     for i in range(401,year+1):
