@@ -22,6 +22,30 @@ for tickers counting:
     # ie +24 per century + possible century leap
     # always can simplify down with %7
     # if year is a leap year, then jan and feb dont get +1 till following year
+    
+logical check:
+year = 1020
+day = 18
+def my_func(year, day):
+    # step 1 - years
+    days = (year - 400) % 7
+    # step 2: LY per century
+    cents = (year - 400) // 100
+    days += (cents * 3) % 7
+    # step 3: LY on the century
+    #cents = -1
+    for i in range(400, year, 100):
+        
+        if i%400 == 0 and i > 400:
+            
+            days +=1
+    # step 3: leap years past the century
+    days += (year % 100) // 4
+    days += (day % 7)
+    days = days % 7
+    return days
+print(my_func(year, day))
+    
 """
 def jf_pipeline(month, day, year):
     counter = 0
