@@ -17,7 +17,7 @@ UP_CAP     = 0.04   # VOO return at which 100% goes to VOO
 DOWN_FLOOR = 0.5   # fraction of contribution auto-invested in UPRO on down months
 DOWN_CAP   = 0.08   # |VOO return| at which 100% goes to UPRO
 
-MAX_UPRO_FRACTION = 0.5  # UPRO can never exceed this share of total portfolio
+MAX_UPRO_FRACTION = 0.25  # UPRO can never exceed this share of total portfolio
 
 END_DATE = "2025-02-01"   # set to "2023-01-01" to cap simulation, None = run to present
 # ─────────────────────────────────────────────────────────────────────────────
