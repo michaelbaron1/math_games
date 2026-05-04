@@ -9,7 +9,7 @@ random.shuffle(vals)
 dimension = int(math.sqrt(len(vals)))
 board = []
 # if you want to set a board you can do it here commented out for now
-#vals = [8, 1, 2, 5, 4, 6, 0, 7, 3]
+vals = [3,0,4,5,1,8,2,6,7]
 for i in range(0, len(vals), dimension):
     board.append(vals[i:i+dimension])
     #print(*vals[i:i+dimension])
@@ -67,7 +67,7 @@ def down_command(vals, dimension):
     return (vals)
 moves = ""
 
-print("Use arrow keys. Press Enter when done.")
+print("Use arrow keys. Press 'h' for a hint. Press Enter when done.")
 
 while True:
     key = readchar.readkey()
@@ -86,6 +86,10 @@ while True:
     elif key == readchar.key.DOWN:
         moves += "d"
         print("d", end="", flush=True)
+    elif key == 'h':
+        flash_board(board, 5)
+        print("Use arrow keys. Press Enter when done.")
+        print(moves, end="", flush=True)
 
 print()
 print("moves:", moves)
