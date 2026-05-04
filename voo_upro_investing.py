@@ -2,7 +2,7 @@ import yfinance as yf
 import pandas as pd
 from datetime import datetime
 from pyxirr import xirr
-print(f"""
+
 # ── CONFIG ────────────────────────────────────────────────────────────────────
 START_DATE          = "2018-01-01"   # simulation start date
 START_VOO           = 10_000          # initial VOO dollars
@@ -19,6 +19,17 @@ DOWN_CAP   = 0.08   # |VOO return| at which 100% goes to UPRO (8%)
 
 MAX_UPRO_FRACTION = 0.0  # UPRO can never exceed this share of total portfolio
 # ─────────────────────────────────────────────────────────────────────────────
+
+print(f"""
+── Config ───────────────────────────────────────────────────────
+  Start date:           {START_DATE}
+  Initial investment:   ${START_VOO + START_UPRO:>10,.2f}  (VOO: ${START_VOO:,.2f} / UPRO: ${START_UPRO:,.2f})
+  Monthly contribution: ${MONTHLY_CONTRIBUTION:>10,.2f}
+  Contribution growth:  {CONTRIBUTION_GROWTH*100:.1f}% / year
+  Up floor/cap:         {UP_FLOOR*100:.0f}% floor / {UP_CAP*100:.0f}% cap
+  Down floor/cap:       {DOWN_FLOOR*100:.0f}% floor / {DOWN_CAP*100:.0f}% cap
+  Max UPRO:             {MAX_UPRO_FRACTION*100:.0f}%
+─────────────────────────────────────────────────────────────────
 """)
 
 def fetch_monthly_prices(ticker: str, start: str) -> pd.Series:
@@ -130,13 +141,13 @@ def run_simulation():
         })
 
     df = pd.DataFrame(records)
-
+    """
     # ── print summary ─────────────────────────────────────────────────────────
     pd.set_option("display.max_rows", None)
     pd.set_option("display.float_format", "{:,.2f}".format)
     print("\n── Monthly Detail ───────────────────────────────────────────────")
     print(df.to_string(index=False))
-
+    """
     total_contributed = START_VOO + START_UPRO + MONTHLY_CONTRIBUTION * (len(df))
     final_value = df.iloc[-1]["total_value"]
     print("\n── Summary ──────────────────────────────────────────────────────")
