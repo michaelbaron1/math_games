@@ -4,12 +4,12 @@ from datetime import datetime
 from pyxirr import xirr
 
 # ── CONFIG ────────────────────────────────────────────────────────────────────
-START_DATE          = "2018-01-01"   # simulation start date
+START_DATE          = "2020-01-01"   # simulation start date
 START_VOO           = 10_000          # initial VOO dollars
 START_UPRO          = 000          # initial UPRO dollars
 
 MONTHLY_CONTRIBUTION = 1_000         # base monthly reinvestment ($)
-CONTRIBUTION_GROWTH  = 0.00          # annual growth rate on contribution (0.10 = 10%)
+CONTRIBUTION_GROWTH  = 0.1          # annual growth rate on contribution (0.10 = 10%)
 
 UP_FLOOR   = 0.50   # fraction of contribution auto-invested in VOO on up months
 UP_CAP     = 0.04   # VOO return at which 100% goes to VOO (6%)
@@ -17,7 +17,9 @@ UP_CAP     = 0.04   # VOO return at which 100% goes to VOO (6%)
 DOWN_FLOOR = 0.25   # fraction of contribution auto-invested in UPRO on down months
 DOWN_CAP   = 0.08   # |VOO return| at which 100% goes to UPRO (8%)
 
-MAX_UPRO_FRACTION = 0.0  # UPRO can never exceed this share of total portfolio
+MAX_UPRO_FRACTION = 0.20  # UPRO can never exceed this share of total portfolio
+
+END_DATE = None #"2026-04-28"   # set to "2023-01-01" to cap simulation, None = run to present
 # ─────────────────────────────────────────────────────────────────────────────
 
 print(f"""
@@ -33,7 +35,7 @@ print(f"""
 """)
 
 def fetch_monthly_prices(ticker: str, start: str) -> pd.Series:
-    df = yf.download(ticker, start=start, interval="1mo", auto_adjust=True, progress=False)
+    df = yf.download(ticker, start=start, end=END_DATE, interval="1mo", auto_adjust=True, progress=False)
     return df["Close"].squeeze()
 
 
@@ -74,6 +76,29 @@ def allocate(contribution: float, voo_return: float,
 
     return voo_invest, upro_invest
 
+def run_benchmark(ticker: str, prices: pd.DataFrame, start_total: float) -> float:
+    price_col = ticker
+    first_date = prices.index[0]
+    shares = start_total / prices.loc[first_date, price_col]
+
+    cash_flows = [-start_total]
+    cash_dates = [first_date.date()]
+    contribution = MONTHLY_CONTRIBUTION
+    year_tracker = first_date.year
+
+    for date in prices.index[1:]:
+        if date.year != year_tracker:
+            contribution *= (1 + CONTRIBUTION_GROWTH)
+            year_tracker = date.year
+        shares += contribution / prices.loc[date, price_col]
+        cash_flows.append(-contribution)
+        cash_dates.append(date.date())
+
+    final_value = shares * prices.iloc[-1][price_col]
+    cash_flows.append(final_value)
+    cash_dates.append(prices.index[-1].date())
+
+    return xirr(cash_dates, cash_flows) * 100
 
 def run_simulation():
     print(f"Fetching price data from {START_DATE}…")
@@ -141,13 +166,13 @@ def run_simulation():
         })
 
     df = pd.DataFrame(records)
-    """
+    
     # ── print summary ─────────────────────────────────────────────────────────
     pd.set_option("display.max_rows", None)
     pd.set_option("display.float_format", "{:,.2f}".format)
     print("\n── Monthly Detail ───────────────────────────────────────────────")
     print(df.to_string(index=False))
-    """
+    
     total_contributed = START_VOO + START_UPRO + MONTHLY_CONTRIBUTION * (len(df))
     final_value = df.iloc[-1]["total_value"]
     print("\n── Summary ──────────────────────────────────────────────────────")
@@ -162,6 +187,16 @@ def run_simulation():
 
     annualized_return = xirr(cash_dates, cash_flows) * 100
     print(f"  Annualized return (XIRR): {annualized_return:.2f}%")
+    print(f"  Total return:         {((final_value - total_contributed) / total_contributed) * 100:.2f}%")
+    print(f"------- BENCHMARKS ----------")
+    voo_only_xirr  = run_benchmark("VOO",  prices, START_VOO + START_UPRO)
+    upro_only_xirr = run_benchmark("UPRO", prices, START_VOO + START_UPRO)
+    print(f"  Benchmark VOO only (XIRR):  {voo_only_xirr:.2f}%")
+    print(f"  Benchmark UPRO only (XIRR): {upro_only_xirr:.2f}%")
+    voo_raw_return  = (prices.loc[prices.index[-1], "VOO"]  / prices.loc[prices.index[0], "VOO"]  - 1) * 100
+    upro_raw_return = (prices.loc[prices.index[-1], "UPRO"] / prices.loc[prices.index[0], "UPRO"] - 1) * 100
+    print(f"  VOO % return:           {voo_raw_return:.2f}%")
+    print(f"  UPRO % return:          {upro_raw_return:.2f}%")
 
 
 if __name__ == "__main__":
