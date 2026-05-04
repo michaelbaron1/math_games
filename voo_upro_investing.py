@@ -1,6 +1,7 @@
 import yfinance as yf
 import pandas as pd
 from datetime import datetime
+from pyxirr import xirr
 
 # ── CONFIG ────────────────────────────────────────────────────────────────────
 START_DATE          = "2018-01-01"   # simulation start date
@@ -11,12 +12,12 @@ MONTHLY_CONTRIBUTION = 1_000         # base monthly reinvestment ($)
 CONTRIBUTION_GROWTH  = 0.00          # annual growth rate on contribution (0.10 = 10%)
 
 UP_FLOOR   = 0.50   # fraction of contribution auto-invested in VOO on up months
-UP_CAP     = 0.06   # VOO return at which 100% goes to VOO (6%)
+UP_CAP     = 0.04   # VOO return at which 100% goes to VOO (6%)
 
 DOWN_FLOOR = 0.25   # fraction of contribution auto-invested in UPRO on down months
 DOWN_CAP   = 0.08   # |VOO return| at which 100% goes to UPRO (8%)
 
-MAX_UPRO_FRACTION = 0.50  # UPRO can never exceed this share of total portfolio
+MAX_UPRO_FRACTION = 0.30  # UPRO can never exceed this share of total portfolio
 # ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -85,6 +86,10 @@ def run_simulation():
     contribution = MONTHLY_CONTRIBUTION
     year_tracker = first_date.year
 
+    # before the loop
+    cash_flows = [-(START_VOO + START_UPRO)]
+    cash_dates = [prices.index[0].date()]
+
     for i, date in enumerate(prices.index[1:], start=1):
         # apply annual contribution growth at year boundary
         if date.year != year_tracker:
@@ -97,6 +102,10 @@ def run_simulation():
 
         voo_value   = voo_shares  * voo_price
         upro_value  = upro_shares * upro_price
+
+        cash_flows.append(-contribution)
+        cash_dates.append(date.date())
+
         total_before = voo_value + upro_value
 
         voo_invest, upro_invest = allocate(contribution, ret, voo_value, upro_value)
@@ -137,6 +146,11 @@ def run_simulation():
     print(f"  Net gain:             ${final_value - total_contributed:>12,.2f}")
     print(f"  Final UPRO share:     {df.iloc[-1]['upro_pct']}%")
     print(f"  Max UPRO % (any mo):  {df['upro_pct'].max()}%")
+    cash_flows.append(final_value)
+    cash_dates.append(prices.index[-1].date())
+
+    annualized_return = xirr(cash_dates, cash_flows) * 100
+    print(f"  Annualized return (XIRR): {annualized_return:.2f}%")
 
 
 if __name__ == "__main__":
