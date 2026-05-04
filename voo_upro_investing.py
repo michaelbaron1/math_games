@@ -2,11 +2,11 @@ import yfinance as yf
 import pandas as pd
 from datetime import datetime
 from pyxirr import xirr
-
+print(f"""
 # ── CONFIG ────────────────────────────────────────────────────────────────────
 START_DATE          = "2018-01-01"   # simulation start date
-START_VOO           = 8_000          # initial VOO dollars
-START_UPRO          = 2_000          # initial UPRO dollars
+START_VOO           = 10_000          # initial VOO dollars
+START_UPRO          = 000          # initial UPRO dollars
 
 MONTHLY_CONTRIBUTION = 1_000         # base monthly reinvestment ($)
 CONTRIBUTION_GROWTH  = 0.00          # annual growth rate on contribution (0.10 = 10%)
@@ -17,9 +17,9 @@ UP_CAP     = 0.04   # VOO return at which 100% goes to VOO (6%)
 DOWN_FLOOR = 0.25   # fraction of contribution auto-invested in UPRO on down months
 DOWN_CAP   = 0.08   # |VOO return| at which 100% goes to UPRO (8%)
 
-MAX_UPRO_FRACTION = 0.30  # UPRO can never exceed this share of total portfolio
+MAX_UPRO_FRACTION = 0.0  # UPRO can never exceed this share of total portfolio
 # ─────────────────────────────────────────────────────────────────────────────
-
+""")
 
 def fetch_monthly_prices(ticker: str, start: str) -> pd.Series:
     df = yf.download(ticker, start=start, interval="1mo", auto_adjust=True, progress=False)
